@@ -1,8 +1,7 @@
 "use client";
 
-import { ProviderShell } from "@agentrep/provider-kit";
-import { config } from "@/lib/provider";
+import { FeastHall } from "@/components/FeastHall";
 
 export default function Page() {
-  return <ProviderShell config={config} />;
+  return <FeastHall />;
 }

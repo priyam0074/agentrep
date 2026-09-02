@@ -2,13 +2,11 @@
 
 /**
  * Same site, same tools, rendered for embedding inside AgentRep.
- * Keeping this as a distinct route means the standalone page can carry
- * chrome (status line, footer) that would be noise in an iframe, while
- * the WebMCP surface stays identical.
+ * Standalone carries the desk chrome; this route stays compact
+ * for a 300px iframe without changing the WebMCP surface.
  */
-import { ProviderShell } from "@agentrep/provider-kit";
-import { config } from "@/lib/provider";
+import { PartyDesk } from "@/components/PartyDesk";
 
 export default function EmbedPage() {
-  return <ProviderShell config={config} embedded />;
+  return <PartyDesk embedded />;
 }
