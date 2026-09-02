@@ -23,18 +23,17 @@ export interface ProviderRecord {
   indexed: boolean;
 }
 
-const origin = (envKey: string, fallback: string) =>
-  (process.env[envKey] as string | undefined) || fallback;
-
-/**
- * Swap these four constants for the real Vercel URLs after deploying.
- * They are the only place deployment URLs appear in the codebase.
- */
+// Next.js can only inline NEXT_PUBLIC_* into the client bundle when each
+// one is referenced as a static `process.env.NEXT_PUBLIC_X` expression —
+// a dynamic `process.env[envKey]` lookup can't be statically analyzed,
+// so it silently evaluates to undefined in the browser (Node still has
+// the real env at build/SSR time, which is why this only broke the
+// client-side value and not the server-rendered one).
 export const PROVIDER_ORIGINS = {
-  partyhub: origin("NEXT_PUBLIC_PARTYHUB_URL", "http://localhost:3001"),
-  cakehub: origin("NEXT_PUBLIC_CAKEHUB_URL", "http://localhost:3002"),
-  foodhub: origin("NEXT_PUBLIC_FOODHUB_URL", "http://localhost:3003"),
-  pokemonpartyhub: origin("NEXT_PUBLIC_POKEMONPARTYHUB_URL", "http://localhost:3004"),
+  partyhub: process.env.NEXT_PUBLIC_PARTYHUB_URL || "http://localhost:3001",
+  cakehub: process.env.NEXT_PUBLIC_CAKEHUB_URL || "http://localhost:3002",
+  foodhub: process.env.NEXT_PUBLIC_FOODHUB_URL || "http://localhost:3003",
+  pokemonpartyhub: process.env.NEXT_PUBLIC_POKEMONPARTYHUB_URL || "http://localhost:3004",
 };
 
 const CATALOGUE: ProviderRecord[] = [
