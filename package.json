@@ -1,0 +1,13 @@
+{
+  "name": "agentrep-monorepo",
+  "private": true,
+  "packageManager": "pnpm@9.12.0",
+  "scripts": {
+    "dev:agentrep": "pnpm --filter agentrep dev",
+    "dev:partyhub": "pnpm --filter partyhub dev -p 3001",
+    "dev:cakehub": "pnpm --filter cakehub dev -p 3002",
+    "dev:foodhub": "pnpm --filter foodhub dev -p 3003",
+    "dev:pokemonpartyhub": "pnpm --filter pokemonpartyhub dev -p 3004",
+    "build": "pnpm -r build"
+  }
+}

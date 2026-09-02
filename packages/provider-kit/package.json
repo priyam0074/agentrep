@@ -1,0 +1,9 @@
+{
+  "name": "@agentrep/provider-kit",
+  "version": "0.1.0",
+  "private": true,
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "dependencies": { "@agentrep/webmcp": "workspace:*" },
+  "peerDependencies": { "react": "^18 || ^19" }
+}
