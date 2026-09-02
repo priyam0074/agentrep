@@ -20,6 +20,17 @@ export function AgentRepApp() {
     setAvailable(isWebMCPAvailable());
   }, []);
 
+  // The provider frames are real cross-origin iframes. Mounting them
+  // during the initial (server-matching) render fights the hydration
+  // pass for that DOM subtree and reliably tips React into "Maximum
+  // update depth exceeded" once the origins are real (Origin-Agent-
+  // Cluster puts each in its own process). Mount them client-side only,
+  // one tick after hydration has settled.
+  const [showFrames, setShowFrames] = useState(false);
+  useEffect(() => {
+    setShowFrames(true);
+  }, []);
+
   return (
     <>
       <header className="masthead">
@@ -40,7 +51,7 @@ export function AgentRepApp() {
         <ActivityLog />
       </div>
 
-      <ProviderFrames />
+      {showFrames && <ProviderFrames />}
       <ApprovalPanel />
     </>
   );
