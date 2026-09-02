@@ -1,3 +1,5 @@
+"use client";
+
 /**
  * Same site, same tools, rendered for embedding inside AgentRep.
  * Keeping this as a distinct route means the standalone page can carry

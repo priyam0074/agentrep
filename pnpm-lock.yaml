@@ -171,12 +171,20 @@ importers:
       react:
         specifier: ^18 || ^19
         version: 19.0.0
+    devDependencies:
+      '@types/react':
+        specifier: ^19
+        version: 19.2.18
 
   packages/webmcp:
     dependencies:
       react:
         specifier: ^18 || ^19
         version: 19.0.0
+    devDependencies:
+      '@types/react':
+        specifier: ^19
+        version: 19.2.18
 
 packages:
 

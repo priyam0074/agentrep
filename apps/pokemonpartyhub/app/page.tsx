@@ -1,3 +1,5 @@
+"use client";
+
 import { ProviderShell } from "@agentrep/provider-kit";
 import { config } from "@/lib/provider";
 
