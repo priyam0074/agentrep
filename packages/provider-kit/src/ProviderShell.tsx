@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useWebMCPTools, isWebMCPAvailable, formatINR } from "@agentrep/webmcp";
 import { createProviderTools } from "./tools";
 import type { Booking, ProviderConfig } from "./types";
@@ -39,7 +39,10 @@ export function ProviderShell({ config, embedded = false }: {
     [config.domain],
   );
 
-  const available = useMemo(() => isWebMCPAvailable(), []);
+  const [available, setAvailable] = useState(false);
+  useEffect(() => {
+    setAvailable(isWebMCPAvailable());
+  }, []);
   const shown = visibleIds;
 
   return (

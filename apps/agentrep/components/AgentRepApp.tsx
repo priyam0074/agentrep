@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useEffect, useState } from "react";
 import { useWebMCPTools, isWebMCPAvailable } from "@agentrep/webmcp";
 import { buildAgentRepTools } from "@/lib/tools";
 import { Board } from "./Board";
@@ -11,7 +11,14 @@ import { ProviderFrames } from "./ProviderFrames";
 
 export function AgentRepApp() {
   useWebMCPTools(buildAgentRepTools, []);
-  const available = useMemo(() => isWebMCPAvailable(), []);
+  // document.modelContext only exists in the browser (and only with the
+  // WebMCP flag). Reading it during render mismatches SSR and hydrates
+  // with React #418. Detect after mount so server and first client paint
+  // both show "not detected".
+  const [available, setAvailable] = useState(false);
+  useEffect(() => {
+    setAvailable(isWebMCPAvailable());
+  }, []);
 
   return (
     <>

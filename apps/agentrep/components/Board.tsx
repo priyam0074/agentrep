@@ -21,9 +21,16 @@ function useHighlight() {
 export function Board() {
   const slots = usePlanStore((s) => s.slots);
   const event = usePlanStore((s) => s.event);
-  const totals = usePlanStore((s) => s.deriveTotals());
-  const violations = usePlanStore((s) => s.validate());
+  // Subscribe to the functions, then call them during render. Calling
+  // deriveTotals()/validate() *inside* the selector returns a new object
+  // every snapshot, which useSyncExternalStore treats as a store change
+  // and loops until React hits max update depth (#185) and hydration
+  // fails (#418).
+  const deriveTotals = usePlanStore((s) => s.deriveTotals);
+  const validate = usePlanStore((s) => s.validate);
   const select = usePlanStore((s) => s.select);
+  const totals = deriveTotals();
+  const violations = validate();
   const hl = useHighlight();
 
   const budget = totals.budgetInPaise;
