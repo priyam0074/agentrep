@@ -1,8 +1,7 @@
 "use client";
 
-import { ProviderShell } from "@agentrep/provider-kit";
-import { config } from "@/lib/provider";
+import { CakeAtelier } from "@/components/CakeAtelier";
 
 export default function Page() {
-  return <ProviderShell config={config} />;
+  return <CakeAtelier />;
 }

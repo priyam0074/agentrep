@@ -71,7 +71,7 @@ export function ProviderShell({ config, embedded = false }: {
       </p>
 
       <div className="p-grid">
-        {config.items.map((item) => {
+        {config.items.map((item, i) => {
           const dim = shown !== null && !shown.includes(item.id);
           return (
             <article
@@ -79,6 +79,7 @@ export function ProviderShell({ config, embedded = false }: {
               className="p-card"
               data-dim={dim}
               data-focus={focusId === item.id}
+              style={{ ["--i" as any]: i }}
             >
               <h3>{item.name}</h3>
               <div className="p-price num">{formatINR(item.priceInPaise)}</div>

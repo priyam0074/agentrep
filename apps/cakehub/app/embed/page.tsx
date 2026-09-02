@@ -2,13 +2,11 @@
 
 /**
  * Same site, same tools, rendered for embedding inside AgentRep.
- * Keeping this as a distinct route means the standalone page can carry
- * chrome (status line, footer) that would be noise in an iframe, while
- * the WebMCP surface stays identical.
+ * Standalone carries the atelier chrome; this route stays compact
+ * for a 300px iframe without changing the WebMCP surface.
  */
-import { ProviderShell } from "@agentrep/provider-kit";
-import { config } from "@/lib/provider";
+import { CakeAtelier } from "@/components/CakeAtelier";
 
 export default function EmbedPage() {
-  return <ProviderShell config={config} embedded />;
+  return <CakeAtelier embedded />;
 }
