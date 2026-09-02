@@ -8,24 +8,15 @@ import { DiscoveryPanel } from "./DiscoveryPanel";
 import { ActivityLog } from "./ActivityLog";
 import { ApprovalPanel } from "./ApprovalPanel";
 import { ProviderFrames } from "./ProviderFrames";
+import { UseCaseMap } from "./UseCaseMap";
 
 export function AgentRepApp() {
   useWebMCPTools(buildAgentRepTools, []);
-  // document.modelContext only exists in the browser (and only with the
-  // WebMCP flag). Reading it during render mismatches SSR and hydrates
-  // with React #418. Detect after mount so server and first client paint
-  // both show "not detected".
   const [available, setAvailable] = useState(false);
   useEffect(() => {
     setAvailable(isWebMCPAvailable());
   }, []);
 
-  // The provider frames are real cross-origin iframes. Mounting them
-  // during the initial (server-matching) render fights the hydration
-  // pass for that DOM subtree and reliably tips React into "Maximum
-  // update depth exceeded" once the origins are real (Origin-Agent-
-  // Cluster puts each in its own process). Mount them client-side only,
-  // one tick after hydration has settled.
   const [showFrames, setShowFrames] = useState(false);
   useEffect(() => {
     setShowFrames(true);
@@ -33,9 +24,10 @@ export function AgentRepApp() {
 
   return (
     <>
-      <header className="masthead">
+      <a className="skip" href="#board">Skip to the plan board</a>
+      <header className="topbar">
         <h1 className="wordmark">AgentRep</h1>
-        <p>Your agent represents you on the web.</p>
+        <span className="topbar-mark">representation protocol</span>
         <span className="spacer" />
         <span className="mcp-state">
           <span className="mcp-dot" data-on={available} />
@@ -44,6 +36,21 @@ export function AgentRepApp() {
             : "WebMCP not detected — enable chrome://flags/#enable-webmcp-testing"}
         </span>
       </header>
+
+      <section className="hero">
+        <div className="hero-inner">
+          <div className="hero-copy">
+            <p className="hero-eyebrow">Use case, not a search page</p>
+            <h2>Your agent represents you on the web.</h2>
+            <p className="hero-lede">
+              AgentRep never plans and never books. It finds which sites can
+              actually do the job, holds the plan as a composition of slots,
+              and gates anything irreversible behind a button only you can press.
+            </p>
+          </div>
+        </div>
+        <UseCaseMap />
+      </section>
 
       <div className="frame">
         <DiscoveryPanel />

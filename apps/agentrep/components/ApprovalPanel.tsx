@@ -29,6 +29,7 @@ export function ApprovalPanel() {
   return (
     <div className="scrim" role="dialog" aria-modal="true" aria-label="Approve bookings">
       <div className="approve">
+        <p className="approve-kicker">Human approval required</p>
         <h3>Approve these bookings?</h3>
         <p className="ask">{pending.message}</p>
 

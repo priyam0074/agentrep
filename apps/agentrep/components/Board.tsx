@@ -46,8 +46,27 @@ export function Board() {
   const violationHl = (code: string) =>
     !!hl?.targets.some((t) => t.kind === "violation" && t.id === code);
 
+  const formula = SLOT_ORDER.map((id) => {
+    const slot = slots[id];
+    const picked = slot.candidates.find((x) => x.id === slot.selectedCandidateId);
+    return { id, label: slot.label, filled: !!picked, name: picked?.name ?? null, optional: !slot.required };
+  });
+
   return (
-    <main className="stage">
+    <main className="stage" id="board">
+      <section className="compose" aria-label="Plan as composition">
+        <p className="compose-kicker"><span className="uc-stereo">«composition»</span> the party is the sum of its slots</p>
+        <ol className="compose-line">
+          {formula.map((n, i) => (
+            <li key={n.id} data-filled={n.filled} data-optional={n.optional}>
+              {i > 0 && <span className="compose-op" aria-hidden="true">{n.optional ? "⊕" : "+"}</span>}
+              <span className="compose-slot">{n.label}</span>
+              <span className="compose-val">{n.filled ? n.name : n.optional ? "optional" : "empty"}</span>
+            </li>
+          ))}
+        </ol>
+      </section>
+
       <section className="meter">
         <div className="meter-top">
           <div className="meter-total num" data-over={over}>
@@ -117,7 +136,7 @@ export function Board() {
                 <p className="slot-empty" style={{ margin: 0 }}>
                   {slot.candidates.length
                     ? "Options gathered, nothing chosen yet."
-                    : "Nothing found for this yet."}
+                    : "Waiting for this include — search the provider, or let the agent."}
                 </p>
               )}
 

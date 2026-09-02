@@ -7,6 +7,7 @@ import { allIndexed, indexLateProvider } from "@/lib/registry";
 export function DiscoveryPanel() {
   const discovery = usePlanStore((s) => s.discovery);
   const log = usePlanStore((s) => s.log);
+  const slots = usePlanStore((s) => s.slots);
   const [, force] = useState(0);
   const [indexed, setIndexed] = useState(false);
 
@@ -23,40 +24,54 @@ export function DiscoveryPanel() {
   };
 
   return (
-    <aside className="rail">
-      <h2>Capability discovery</h2>
+    <aside className="rail" aria-labelledby="disc-heading">
+      <h2 id="disc-heading">Actors &amp; capabilities</h2>
       <p className="hint">
-        Which sites can actually do the job, not which sites talk about it.
+        Sites that can perform a part of the goal — not pages that mention it.
       </p>
 
       {discovery ? (
-        <p className="query">{discovery.query}</p>
+        <div className="query-block">
+          <span className="uc-stereo">«goal»</span>
+          <p className="query">{discovery.query}</p>
+          <p className="query-meta">
+            {providers.length} include{providers.length === 1 ? "" : "s"} matched
+          </p>
+        </div>
       ) : (
         <p className="rail-empty">
-          No search yet. Ask your agent to use AgentRep and its queries appear here.
+          No search yet. Run a goal on the map, or ask your agent to call
+          discover_sites — the includes light up here.
         </p>
       )}
 
-      {providers.map((p) => (
-        <div key={p.domain} className="prov">
-          <div className="prov-head">
-            <span className="prov-name">{p.name}</span>
-            <span className="prov-cap">{p.capability}</span>
-          </div>
-          <p className="prov-sum">{p.summary}</p>
-          <div className="prov-tools">
-            {p.tools.map((t) => <span key={t}>{t}</span>)}
-          </div>
-        </div>
-      ))}
+      {providers.map((p) => {
+        const slot = slots[p.slot];
+        const n = slot.candidates.length;
+        return (
+          <article key={p.domain} className="prov">
+            <div className="prov-head">
+              <span className="prov-name">{p.name}</span>
+              <span className="prov-cap">{p.capability}</span>
+            </div>
+            <p className="prov-sum">{p.summary}</p>
+            <p className="prov-fill">
+              fills <b>{slot.label}</b>
+              {n > 0 ? ` · ${n} option${n === 1 ? "" : "s"} on the board` : " · waiting for a search on the site"}
+            </p>
+            <div className="prov-tools">
+              {p.tools.map((t) => <span key={t}>{t}</span>)}
+            </div>
+          </article>
+        );
+      })}
 
       <div className="sim">
         <p>
-          Demo control, not a product feature: publishes a site that is already
-          running and lets the registry index it, so you can see a new
-          capability arrive mid-conversation.
+          Demo control: indexes a live site that was unpublished at the start,
+          so a new «extend» can arrive mid-conversation.
         </p>
-        <button onClick={publish} disabled={indexed}>
+        <button type="button" onClick={publish} disabled={indexed}>
           {indexed ? "PokemonPartyHub indexed" : "Index a newly published site"}
         </button>
       </div>

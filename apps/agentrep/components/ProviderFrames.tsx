@@ -26,9 +26,9 @@ export function ProviderFrames() {
   return (
     <section className="frames">
       <div className="frames-head">
-        <h2>Provider sites</h2>
+        <h2>Included systems</h2>
         <p>
-          Separate origins, each registering its own tools into this page.
+          Separate origins inside the use case — each registers its own tools here.
         </p>
         <span className="spacer" />
         <p>{relevant.length} embedded</p>
