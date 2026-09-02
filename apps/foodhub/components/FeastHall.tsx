@@ -115,13 +115,13 @@ export function FeastHall({ embedded = false }: { embedded?: boolean }) {
             <p className="fh-eyebrow">Catering · Delhi NCR</p>
             <h1>Fed properly,<em>or not at all.</em></h1>
             <p className="fh-lede">
-              Four packages, from snack boxes to a live pasta counter. Prices
-              cover a set headcount; extra guests are costed per head, up
-              front. Search here, or let an agent do it.
+              {config.items.length} packages — pizza, thali, dosa, grill, dessert
+              and the rest. Prices cover a set headcount; extra guests are
+              costed per head, up front. Search here, or let an agent do it.
             </p>
             <dl className="fh-facts">
               <div><dt>Packages</dt><dd>{config.items.length}</dd></div>
-              <div><dt>From</dt><dd className="num">₹120/head</dd></div>
+              <div><dt>From</dt><dd className="num">₹80/head</dd></div>
               <div><dt>City</dt><dd>Delhi NCR</dd></div>
             </dl>
           </div>

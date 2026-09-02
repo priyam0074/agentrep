@@ -1,5 +1,31 @@
-import type { ProviderConfig } from "@agentrep/provider-kit";
+import type { CatalogueItem, ProviderConfig } from "@agentrep/provider-kit";
 import { paise } from "@agentrep/webmcp";
+
+const pkg = (
+  id: string,
+  name: string,
+  price: number,
+  blurb: string,
+  guests: number,
+  perHead: number,
+  vegetarian: boolean,
+  courses: number,
+  tags: string[],
+  cuisine: string,
+): CatalogueItem => ({
+  id,
+  name,
+  priceInPaise: paise(price),
+  blurb,
+  attributes: {
+    includedGuests: guests,
+    perHeadInPaise: paise(perHead),
+    vegetarian,
+    courses,
+    cuisine,
+  },
+  tags,
+});
 
 export const config: ProviderConfig = {
   brand: "FoodHub",
@@ -19,6 +45,15 @@ export const config: ProviderConfig = {
   },
   filters: [
     {
+      key: "query",
+      type: "string",
+      description: "Free-text search across package name, cuisine, tags and description. e.g. \"pizza\", \"chaat\", \"vegetarian\".",
+      match: (i, v) => {
+        const q = String(v).toLowerCase();
+        return `${i.name} ${i.blurb} ${i.tags.join(" ")} ${i.attributes.cuisine}`.toLowerCase().includes(q);
+      },
+    },
+    {
       key: "maxBudgetInPaise",
       type: "number",
       description: "Highest acceptable base price in paise. Note this excludes extra-guest charges — use get_price for the real total.",
@@ -31,6 +66,14 @@ export const config: ProviderConfig = {
       match: () => true,
     },
     {
+      key: "cuisine",
+      type: "string",
+      description: "Cuisine family, e.g. \"pizza\", \"indian\", \"chinese\", \"dessert\".",
+      match: (i, v) =>
+        String(i.attributes.cuisine).toLowerCase().includes(String(v).toLowerCase())
+        || i.tags.some((t) => t.toLowerCase().includes(String(v).toLowerCase())),
+    },
+    {
       key: "vegetarianOnly",
       type: "boolean",
       description: "Restrict to fully vegetarian packages.",
@@ -38,37 +81,49 @@ export const config: ProviderConfig = {
     },
   ],
   items: [
-    {
-      id: "food-kids-party",
-      name: "Kids Party Package",
-      priceInPaise: paise(4500),
-      blurb: "Pizza, fries, drinks and dessert. The standard order, and the one most parents pick.",
-      attributes: { includedGuests: 15, perHeadInPaise: paise(180), vegetarian: true, courses: 4 },
-      tags: ["kids", "pizza", "popular"],
-    },
-    {
-      id: "food-mini-feast",
-      name: "Mini Feast",
-      priceInPaise: paise(2800),
-      blurb: "Sandwiches, fries and juice. Less food than the party package, and it shows.",
-      attributes: { includedGuests: 12, perHeadInPaise: paise(150), vegetarian: true, courses: 3 },
-      tags: ["kids", "budget"],
-    },
-    {
-      id: "food-deluxe",
-      name: "Deluxe Spread",
-      priceInPaise: paise(6800),
-      blurb: "Live pasta counter, chaat station, mocktails and dessert. A proper spread for the adults too.",
-      attributes: { includedGuests: 20, perHeadInPaise: paise(240), vegetarian: false, courses: 6 },
-      tags: ["premium", "adults"],
-    },
-    {
-      id: "food-snack-boxes",
-      name: "Snack Boxes",
-      priceInPaise: paise(1950),
-      blurb: "Individually packed boxes handed out at the end. Cheapest option, and no service staff.",
-      attributes: { includedGuests: 15, perHeadInPaise: paise(120), vegetarian: true, courses: 1 },
-      tags: ["budget", "takeaway"],
-    },
+    pkg("food-kids-party", "Kids Party Package", 4500, "Pizza, fries, drinks and dessert. The standard order, and the one most parents pick.", 15, 180, true, 4, ["kids", "pizza", "popular"], "pizza"),
+    pkg("food-mini-feast", "Mini Feast", 2800, "Sandwiches, fries and juice. Less food than the party package, and it shows.", 12, 150, true, 3, ["kids", "budget"], "snacks"),
+    pkg("food-deluxe", "Deluxe Spread", 6800, "Live pasta counter, chaat station, mocktails and dessert. A proper spread for the adults too.", 20, 240, false, 6, ["premium", "adults"], "premium"),
+    pkg("food-snack-boxes", "Snack Boxes", 1950, "Individually packed boxes handed out at the end. No service staff, and no plates to collect.", 15, 120, true, 1, ["budget", "takeaway"], "snacks"),
+    pkg("food-pizza-party", "Wood-fired Pizza Party", 4200, "Three pizzas on rotation, garlic bread, cola. Kids eat this without being asked twice.", 16, 170, true, 3, ["kids", "pizza", "popular"], "pizza"),
+    pkg("food-thin-crust", "Thin-crust Trio", 3900, "Margherita, corn and paneer. Lighter than the party pizza, same oven.", 14, 165, true, 3, ["kids", "pizza"], "pizza"),
+    pkg("food-burger-sliders", "Mini Burger Sliders", 3600, "Veg sliders, fries, ketchup art. Messy on purpose.", 15, 160, true, 3, ["kids", "popular"], "burgers"),
+    pkg("food-chicken-sliders", "Chicken Slider Tray", 4100, "Soft buns, crumbed chicken, a veg option on the side. Adults steal these.", 16, 190, false, 3, ["kids"], "burgers"),
+    pkg("food-taco-bar", "Build-your-own Tacos", 4300, "Shells, beans, salsa, cheese. A station, not a plated meal.", 18, 175, true, 4, ["kids", "popular"], "mexican"),
+    pkg("food-nachos-bar", "Nachos Bar", 2400, "Chips, cheese sauce, jalapeños on the side. Budget, loud, gone in twenty minutes.", 15, 110, true, 2, ["kids", "budget"], "mexican"),
+    pkg("food-pasta-bar", "Live Pasta Counter", 5200, "Penne, two sauces, cheese. The deluxe pasta without the chaat.", 18, 200, true, 4, ["premium", "kids"], "pasta"),
+    pkg("food-mac-cheese", "Mac and Cheese Pans", 3100, "One pan, many spoons. The under-eights' favourite.", 14, 140, true, 2, ["kids", "budget", "popular"], "pasta"),
+    pkg("food-biryani-veg", "Veg Dum Biryani", 4800, "Hyderabadi-style veg biryani, raita, salan. Feeds a hungry table.", 16, 200, true, 3, ["indian", "popular"], "indian"),
+    pkg("food-biryani-chicken", "Chicken Dum Biryani", 5600, "Bone-in chicken biryani, extra raita. Non-veg that still works at a kids' party.", 16, 230, false, 3, ["indian", "premium"], "indian"),
+    pkg("food-chaat-station", "Chaat Station", 3400, "Pani puri, bhel, dahi papdi. A host to fill them, or it turns into a puddle.", 20, 130, true, 3, ["indian", "kids", "popular"], "indian"),
+    pkg("food-samosa-chaat", "Samosa Chaat Trays", 2200, "Samosas smashed into chaat. Cheap, filling, vegetarian.", 18, 100, true, 2, ["indian", "budget"], "indian"),
+    pkg("food-pav-bhaji", "Pav Bhaji Counter", 3000, "Bhaji on a tava, butter pav. Mumbai in a chafing dish.", 16, 140, true, 2, ["indian", "kids"], "indian"),
+    pkg("food-chole-bhature", "Chole Bhature", 3200, "Two bhaturas a head, chole, onion. Heavy, so skip a second main.", 14, 155, true, 2, ["indian"], "indian"),
+    pkg("food-rajma-chawal", "Rajma Chawal Tubs", 2600, "Home-style rajma, jeera rice. The comfort order.", 16, 125, true, 2, ["indian", "budget", "kids"], "indian"),
+    pkg("food-north-thali", "North Indian Thali", 5400, "Dal, two sabzis, roti, rice, pickle, sweet. A sit-down meal.", 15, 220, true, 6, ["indian", "premium"], "indian"),
+    pkg("food-gujarati-thali", "Gujarati Thali", 5000, "Sweet dal, undhiyu in season, rotli, farsan. Vegetarian by default.", 14, 210, true, 6, ["indian", "premium"], "indian"),
+    pkg("food-kerala-sadya", "Mini Sadya", 6200, "Banana leaf, sambar, avial, payasam. Needs notice, and it shows.", 12, 260, true, 8, ["indian", "premium"], "south"),
+    pkg("food-dosa-counter", "Dosa Counter", 3800, "Plain and masala dosas off a tava. One cook, a queue, worth it.", 16, 165, true, 3, ["indian", "kids", "south"], "south"),
+    pkg("food-idli-vada", "Idli Vada Tiffin", 2400, "Idli, vada, sambar, chutney. Breakfast party, or a 4pm hunger gap.", 15, 115, true, 3, ["indian", "budget", "south"], "south"),
+    pkg("food-south-mini", "South Indian Mini Meal", 3600, "Rice, sambar, poriyal, appalam. Quieter than a dosa counter.", 14, 160, true, 4, ["indian", "south"], "south"),
+    pkg("food-chinese-box", "Indo-Chinese Boxes", 3300, "Hakka noodles, manchurian, a spring roll. Packed, so no plates.", 16, 150, true, 3, ["chinese", "kids", "takeaway"], "chinese"),
+    pkg("food-noodle-wok", "Live Noodle Wok", 4700, "Hakka tossed in front of them. Smoke, theatre, soy.", 18, 185, false, 3, ["chinese", "premium", "kids"], "chinese"),
+    pkg("food-momos-platter", "Momo Platters", 2700, "Veg momos, spicy and mild dip. Steamers on the table.", 16, 120, true, 2, ["chinese", "budget", "kids"], "chinese"),
+    pkg("food-paneer-tikka", "Paneer Tikka Skewers", 3500, "Tandoor paneer, mint chutney. Pass-around, not a meal.", 18, 145, true, 2, ["indian", "kids"], "grill"),
+    pkg("food-tandoori-mixed", "Mixed Grill Platter", 6400, "Chicken tikka, seekh, paneer, salad. For mixed tables.", 16, 250, false, 4, ["indian", "premium"], "grill"),
+    pkg("food-bbq-grill", "BBQ Grill Station", 7200, "Live grill, corn, chicken, veg skewers. Needs outdoor or a terrace.", 20, 270, false, 5, ["premium", "kids"], "grill"),
+    pkg("food-kebabs-rolls", "Kathi Rolls", 3400, "Paneer and egg rolls, wrapped. Easy to hold while they run.", 16, 150, false, 2, ["indian", "kids", "popular"], "wraps"),
+    pkg("food-wraps-station", "Wraps Station", 3700, "Tortillas, falafel, hummus, salad. The taco bar's quieter cousin.", 16, 160, true, 3, ["kids"], "wraps"),
+    pkg("food-hotdog-cart", "Hotdog Cart", 2500, "Veg dogs, mustard, ketchup. A cart, not a kitchen.", 15, 110, true, 2, ["kids", "budget"], "burgers"),
+    pkg("food-popcorn-candy", "Popcorn and Candy Bar", 1800, "Popcorn machine, gummy jars, no real meal. Pair with something else.", 20, 80, true, 1, ["kids", "budget", "dessert"], "dessert"),
+    pkg("food-waffle-station", "Waffle Station", 3200, "Belgian waffles, chocolate, fruit. Dessert that pretends to be tea.", 14, 150, true, 2, ["kids", "dessert", "popular"], "dessert"),
+    pkg("food-ice-cream-cart", "Ice Cream Cart", 2900, "Two flavours, cones, cups. Melts if you skip shade.", 18, 100, true, 1, ["kids", "dessert", "popular"], "dessert"),
+    pkg("food-cupcake-tower", "Cupcake Tower", 2600, "Twenty-four cupcakes, two flavours. Not a substitute for a cake.", 16, 90, true, 1, ["kids", "dessert"], "dessert"),
+    pkg("food-jalebi-rabri", "Jalebi Rabri Cups", 2300, "Hot jalebi, cold rabri. Indian dessert that photographs well.", 16, 95, true, 1, ["indian", "dessert"], "dessert"),
+    pkg("food-fruit-platter", "Fresh Fruit Platters", 2100, "Watermelon, grapes, melon. The parent-approved sweet.", 18, 90, true, 1, ["kids", "budget"], "fruit"),
+    pkg("food-salad-bar", "Kids Salad Bar", 2400, "Cucumber, corn, pasta salad, a dressing they will ignore.", 16, 105, true, 2, ["kids", "budget"], "fruit"),
+    pkg("food-breakfast-brunch", "Birthday Brunch", 4400, "Pancakes, cutlets, fruit, juice. Morning slots only feel like this.", 15, 180, true, 4, ["kids", "popular"], "brunch"),
+    pkg("food-high-tea", "High Tea Stack", 4000, "Sandwiches, scones, mini tarts, tea and squash. Grandparents approve.", 14, 175, true, 4, ["premium"], "brunch"),
+    pkg("food-poha-cutlets", "Poha and Cutlets", 2000, "Poha, aloo cutlets, chutney. The 11am party.", 16, 95, true, 2, ["indian", "budget"], "brunch"),
   ],
 };
