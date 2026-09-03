@@ -1,3 +1,5 @@
+import { isNcrQuery, localityFitsQuery, resolveCity } from "./cities";
+
 /** Presentation-only. Catalogue facts stay on `config.items` for the agent. */
 
 export interface VenueVisual {
@@ -132,8 +134,11 @@ export function matchesQuery(
   query: string,
   item: { name: string; blurb: string; tags: string[]; attributes: Record<string, string | number | boolean> },
 ) {
-  const q = query.trim().toLowerCase();
+  const q = query.trim();
   if (!q) return true;
+  if (resolveCity(q) || isNcrQuery(q)) {
+    return localityFitsQuery(String(item.attributes.locality), q);
+  }
   const hay = `${item.name} ${item.blurb} ${item.tags.join(" ")} ${item.attributes.locality}`.toLowerCase();
-  return hay.includes(q);
+  return hay.includes(q.toLowerCase());
 }

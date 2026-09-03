@@ -1,0 +1,4 @@
+{
+  "typescript.tsdk": "apps/agentrep/node_modules/typescript/lib",
+  "typescript.enablePromptUseWorkspaceTsdk": true
+}

@@ -17,26 +17,23 @@ import { usePlanStore } from "@/store/planStore";
  * standalone — see README, "multi-origin findings".
  */
 export function ProviderFrames() {
-  const discovery = usePlanStore((s) => s.discovery);
+  usePlanStore((s) => s.activity.length);
   const providers = allIndexed();
-  const relevant = discovery
-    ? providers.filter((p) => discovery.providers.includes(p.name))
-    : providers;
 
   return (
     <section className="frames">
       <div className="frames-head">
         <h2>Included systems</h2>
         <p>
-          Separate origins inside the use case — each registers its own tools here.
+          Separate origins. Each registers its own WebMCP tools into this tab.
         </p>
         <span className="spacer" />
-        <p>{relevant.length} embedded</p>
+        <p>{providers.length} origin{providers.length === 1 ? "" : "s"} live</p>
       </div>
       <div className="frames-grid">
-        {relevant.map((p) => (
+        {providers.map((p) => (
           <div key={p.domain}>
-            <div className="frame-label">{p.name} · {p.domain}</div>
+            <div className="frame-label">{p.name} · {p.tools[p.tools.length - 1]} · {p.domain}</div>
             <div className="frame-box">
               <iframe
                 src={p.embedUrl}

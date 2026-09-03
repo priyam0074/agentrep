@@ -21,6 +21,10 @@ function useHighlight() {
 export function Board() {
   const slots = usePlanStore((s) => s.slots);
   const event = usePlanStore((s) => s.event);
+  const discovery = usePlanStore((s) => s.discovery);
+  const pending = usePlanStore((s) => s.pendingApproval);
+  const authorised = usePlanStore((s) => s.authorised);
+  const activity = usePlanStore((s) => s.activity);
   // Subscribe to the functions, then call them during render. Calling
   // deriveTotals()/validate() *inside* the selector returns a new object
   // every snapshot, which useSyncExternalStore treats as a store change
@@ -52,10 +56,32 @@ export function Board() {
     return { id, label: slot.label, filled: !!picked, name: picked?.name ?? null, optional: !slot.required };
   });
 
+  const PHASES = ["discover", "gather", "check", "approve", "execute"] as const;
+  const booked = SLOT_ORDER.some((id) => !!slots[id].bookedReference);
+  const gathered = SLOT_ORDER.some((id) => slots[id].candidates.length > 0);
+  const checked = violations.length > 0
+    || activity.some((a) => a.tool === "check_plan" || a.tool === "find_savings");
+  const phase: (typeof PHASES)[number] = booked
+    ? "execute"
+    : (pending || authorised) ? "approve"
+    : checked ? "check"
+    : gathered ? "gather"
+    : discovery ? "discover"
+    : "discover";
+  const phaseIdx = PHASES.indexOf(phase);
+
   return (
     <main className="stage" id="board">
+      <ol className="phases" aria-label="Plan phase">
+        {PHASES.map((id, i) => (
+          <li key={id} data-state={i < phaseIdx ? "done" : i === phaseIdx ? "on" : "wait"}>
+            {id === "discover" ? "Discover" : id === "gather" ? "Gather" : id === "check" ? "Check" : id === "approve" ? "Approve" : "Execute"}
+          </li>
+        ))}
+      </ol>
+
       <section className="compose" aria-label="Plan as composition">
-        <p className="compose-kicker"><span className="uc-stereo">«composition»</span> the party is the sum of its slots</p>
+        <p className="compose-kicker">The plan is the sum of its parts</p>
         <ol className="compose-line">
           {formula.map((n, i) => (
             <li key={n.id} data-filled={n.filled} data-optional={n.optional}>

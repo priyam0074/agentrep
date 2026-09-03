@@ -8,6 +8,7 @@
     "dev:cakehub": "pnpm --filter cakehub dev -p 3002",
     "dev:foodhub": "pnpm --filter foodhub dev -p 3003",
     "dev:pokemonpartyhub": "pnpm --filter pokemonpartyhub dev -p 3004",
+    "chrome:webmcp": "bash scripts/open-chrome-webmcp.sh",
     "build": "pnpm -r build"
   }
 }

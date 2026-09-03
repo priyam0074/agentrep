@@ -3,6 +3,7 @@
 import { useEffect, useRef } from "react";
 import { formatINR } from "@agentrep/webmcp";
 import { usePlanStore } from "@/store/planStore";
+import { getProvider, writeTool } from "@/lib/registry";
 
 /**
  * The gate. request_approval blocks on this panel: the promise it
@@ -26,24 +27,36 @@ export function ApprovalPanel() {
 
   if (!pending) return null;
 
+  const n = pending.lineItems.length;
+
   return (
     <div className="scrim" role="dialog" aria-modal="true" aria-label="Approve bookings">
       <div className="approve">
-        <p className="approve-kicker">Human approval required</p>
-        <h3>Approve these bookings?</h3>
+        <p className="approve-kicker">Plan ready</p>
+        <p className="approve-total num">{formatINR(pending.totalInPaise)}</p>
+        <p className="approve-count">
+          {n} action{n === 1 ? "" : "s"} · AgentRep does not book
+        </p>
         <p className="ask">{pending.message}</p>
 
         <table className="lines">
           <tbody>
-            {pending.lineItems.map((li) => (
-              <tr key={li.slot}>
-                <td>
-                  {li.name}
-                  <div className="prov">{li.label} · {li.provider}</div>
-                </td>
-                <td className="num">{formatINR(li.priceInPaise)}</td>
-              </tr>
-            ))}
+            {pending.lineItems.map((li) => {
+              const p = getProvider(li.provider);
+              const tool = p ? writeTool(p) : null;
+              return (
+                <tr key={li.slot}>
+                  <td>
+                    {li.name}
+                    <div className="prov">
+                      {li.label} · {li.provider}
+                      {tool ? ` · ${tool}` : ""}
+                    </div>
+                  </td>
+                  <td className="num">{formatINR(li.priceInPaise)}</td>
+                </tr>
+              );
+            })}
             <tr className="total">
               <td>Total</td>
               <td className="num">{formatINR(pending.totalInPaise)}</td>
@@ -53,16 +66,15 @@ export function ApprovalPanel() {
 
         <div className="approve-actions">
           <button ref={approveRef} className="btn btn-primary" onClick={() => resolve("approved")}>
-            Approve and book
+            Approve
           </button>
           <button className="btn btn-ghost" onClick={() => resolve("rejected")}>
             Not yet
           </button>
         </div>
         <p className="fineprint">
-          Approving issues a single-use token tied to this exact plan. If
-          anything changes afterwards the token stops working and your agent
-          has to ask again.
+          AgentRep does not book. Approval authorises your agent to call
+          these tools. The token is single-use and dies if the plan changes.
         </p>
       </div>
     </div>

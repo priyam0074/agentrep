@@ -2,7 +2,7 @@
   "name": "agentrep",
   "version": "0.1.0",
   "private": true,
-  "scripts": { "dev": "next dev", "build": "next build", "start": "next start" },
+  "scripts": { "dev": "next dev -p 3000", "build": "next build", "start": "next start" },
   "dependencies": {
     "@agentrep/webmcp": "workspace:*",
     "next": "15.1.12",

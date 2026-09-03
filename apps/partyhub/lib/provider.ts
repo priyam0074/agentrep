@@ -1,5 +1,6 @@
 import type { ProviderConfig } from "@agentrep/provider-kit";
 import { paise } from "@agentrep/webmcp";
+import { isNcrQuery, localityFitsQuery, resolveCity } from "./cities";
 
 const DATES = ["2026-09-12", "2026-09-19", "2026-09-26"];
 const LATER = ["2026-09-19", "2026-09-26"];
@@ -10,6 +11,9 @@ const textMatch = (item: {
   tags: string[];
   attributes: Record<string, string | number | boolean>;
 }, q: string) => {
+  if (resolveCity(q) || isNcrQuery(q)) {
+    return localityFitsQuery(String(item.attributes.locality), q);
+  }
   const hay = `${item.name} ${item.blurb} ${item.tags.join(" ")} ${item.attributes.locality}`.toLowerCase();
   return hay.includes(q.toLowerCase());
 };
@@ -52,16 +56,18 @@ export const config: ProviderConfig = {
     {
       key: "theme",
       type: "string",
-      description: "Party theme, e.g. \"Pokémon\", \"superhero\", \"unicorn\". Matched loosely against the venue's supported themes.",
+      description: "Party theme, e.g. \"Pokémon\", \"superhero\", \"unicorn\". Hard filter on tags. Omit this if it would drop venues that still fit guests and date — theme mismatch is also a warning on the AgentRep board.",
       match: (i, v) =>
         i.tags.some((t) => t.toLowerCase().includes(String(v).toLowerCase())),
     },
     {
       key: "locality",
       type: "string",
-      description: "Neighbourhood, e.g. \"Gurugram\", \"Noida\", \"Saket\".",
-      match: (i, v) =>
-        String(i.attributes.locality).toLowerCase().includes(String(v).toLowerCase()),
+      description:
+        "City or neighbourhood, e.g. \"Delhi\", \"Noida\", \"Saket\". " +
+        "Delhi is Delhi proper — it does not include Noida or Gurugram. " +
+        "Use \"Delhi NCR\" only when the user wants the whole NCR.",
+      match: (i, v) => localityFitsQuery(String(i.attributes.locality), String(v)),
     },
     {
       key: "indoorOnly",

@@ -1,117 +1,114 @@
 "use client";
 
 import { usePlanStore } from "@/store/planStore";
-import { allIndexed, discover } from "@/lib/registry";
-import { SLOT_ORDER, SLOT_REQUIRED, type SlotId } from "@/lib/types";
+import { allKnown, discover, writeTool } from "@/lib/registry";
+import { SLOT_ORDER, SLOT_REQUIRED, type Slot, type SlotId } from "@/lib/types";
 
 const EXAMPLES = [
-  "children's birthday venue in Delhi",
-  "catering for twenty kids",
-  "themed cake and entertainer",
+  "venue in Delhi",
+  "catering for twenty",
+  "themed entertainment",
 ];
 
-const SLOT_VERB: Record<SlotId, string> = {
-  venue: "book a place",
-  food: "feed the table",
-  cake: "order the cake",
-  entertainment: "host the room",
+const SLOT_JOB: Record<SlotId, string> = {
+  venue: "Book a place",
+  food: "Arrange food",
+  cake: "Order dessert",
+  entertainment: "Add entertainment",
 };
 
-export function UseCaseMap() {
+const PHASE_COPY = {
+  awaiting: "Missing",
+  idle: "Waiting",
+  discovered: "Found",
+  gathered: "Options",
+  selected: "Chosen",
+  booked: "Booked",
+} as const;
+
+type NodePhase = keyof typeof PHASE_COPY;
+
+function phaseOf(
+  slot: Slot,
+  indexed: boolean | undefined,
+  hit: boolean,
+): NodePhase {
+  if (!indexed) return "awaiting";
+  if (slot.bookedReference) return "booked";
+  if (slot.selectedCandidateId) return "selected";
+  if (slot.candidates.length > 0) return "gathered";
+  if (hit) return "discovered";
+  return "idle";
+}
+
+/** Compact live HUD — four capabilities, no UML. Lights up from tool calls. */
+export function CapabilityHud() {
   const discovery = usePlanStore((s) => s.discovery);
   const slots = usePlanStore((s) => s.slots);
   const setDiscovery = usePlanStore((s) => s.setDiscovery);
   const log = usePlanStore((s) => s.log);
   usePlanStore((s) => s.activity.length);
 
-  const indexed = allIndexed();
+  const known = allKnown();
   const matchedNames = new Set(discovery?.providers ?? []);
   const live = !!discovery;
+  const occasion = usePlanStore((s) => s.event.occasion);
 
   const runQuery = (query: string) => {
     const hits = discover(query, 5);
-    setDiscovery(query, hits.map((h) => h.name));
+    setDiscovery(query, hits.map((h) => ({
+      name: h.name, capability: h.capability, tools: h.tools,
+      relevance: h.relevance, slot: h.slot,
+    })));
     log("discover_sites", `"${query}" → ${hits.length} provider(s)`, "discovery");
   };
 
   return (
-    <figure className="uc" data-live={live} aria-label="Use case map">
-      <figcaption className="uc-caption" aria-live="polite">
-        <span className="uc-stereo">«use case»</span>
-        <strong>{live ? discovery.query : "Represent you while a party is assembled on the web"}</strong>
-      </figcaption>
-
-      <div className="uc-stage">
-        <div className="uc-actors" aria-label="Actors">
-          <article className="uc-actor" data-role="primary">
-            <span className="uc-stereo">«primary actor»</span>
-            <b>You</b>
-            <span>goal, budget, the yes</span>
-          </article>
-          <svg className="uc-link" viewBox="0 0 48 12" aria-hidden="true">
-            <title>associates</title>
-            <line x1="2" y1="6" x2="46" y2="6" />
-            <polygon points="46,6 38,2 38,10" />
-          </svg>
-          <article className="uc-actor" data-role="agent">
-            <span className="uc-stereo">«supporting»</span>
-            <b>Agent</b>
-            <span>reasons, never books</span>
-          </article>
-          <svg className="uc-link" viewBox="0 0 48 12" aria-hidden="true">
-            <title>uses</title>
-            <line x1="2" y1="6" x2="46" y2="6" />
-            <polygon points="46,6 38,2 38,10" />
-          </svg>
-          <article className="uc-actor" data-role="system">
-            <span className="uc-stereo">«system»</span>
-            <b>AgentRep</b>
-            <span>discovers · holds · gates</span>
-          </article>
-        </div>
-
-        <div className="uc-boundary">
-          <p className="uc-boundary-label">system boundary</p>
-          <ol className="uc-includes">
-            {SLOT_ORDER.map((id) => {
-              const slot = slots[id];
-              const picked = slot.candidates.find((c) => c.id === slot.selectedCandidateId);
-              const provider = indexed.find((p) => p.slot === id);
-              const hit = provider && matchedNames.has(provider.name);
-              const dim = live && !hit;
-              return (
-                <li
-                  key={id}
-                  className="uc-inc"
-                  data-slot={id}
-                  data-hit={!!hit}
-                  data-filled={!!picked}
-                  data-dim={dim}
-                >
-                  <span className="uc-inc-rel">
-                    {SLOT_REQUIRED[id] ? "«include»" : "«extend»"}
-                  </span>
-                  <span className="uc-inc-slot">{slot.label}</span>
-                  <span className="uc-inc-goal">{SLOT_VERB[id]}</span>
-                  <span className="uc-inc-site">
-                    {provider
-                      ? hit || !live
-                        ? provider.name
-                        : "not in this search"
-                      : "unindexed"}
-                  </span>
-                  {picked && (
-                    <span className="uc-inc-pick">{picked.name}</span>
-                  )}
-                </li>
-              );
-            })}
-          </ol>
-        </div>
+    <div className="hud-map" data-live={live}>
+      <div className="hud-run">
+        <p className="hud-run-label">This run</p>
+        <p className="hud-run-title" aria-live="polite">
+          {live ? discovery.query : occasion}
+        </p>
       </div>
 
-      <div className="uc-examples">
-        <p>Try a goal — same path your agent takes.</p>
+      <ol className="hud-nodes" aria-label="Capabilities for this run">
+        {SLOT_ORDER.map((id) => {
+          const slot = slots[id];
+          const picked = slot.candidates.find((c) => c.id === slot.selectedCandidateId);
+          const provider = known.find((p) => p.slot === id);
+          const hit = !!(provider?.indexed && matchedNames.has(provider.name));
+          const phase = phaseOf(slot, provider?.indexed, hit);
+          const dim = live && phase !== "awaiting" && !hit && phase === "idle";
+          return (
+            <li
+              key={id}
+              className="hud-node"
+              data-slot={id}
+              data-phase={phase}
+              data-dim={dim}
+            >
+              <span className="hud-status">{PHASE_COPY[phase]}</span>
+              <strong className="hud-slot">{slot.label}</strong>
+              <span className="hud-job">{SLOT_JOB[id]}</span>
+              <span className="hud-site">
+                {phase === "awaiting"
+                  ? "Not on the web yet"
+                  : provider?.name ?? "—"}
+              </span>
+              {provider?.indexed ? (
+                <span className="hud-tool">{writeTool(provider)}</span>
+              ) : (
+                !SLOT_REQUIRED[id] && <span className="hud-tool">optional</span>
+              )}
+              {picked && <span className="hud-pick">{picked.name}</span>}
+            </li>
+          );
+        })}
+      </ol>
+
+      <details className="hud-practice">
+        <summary>Practice a search</summary>
         <div className="uc-chips" role="group" aria-label="Example goals">
           {EXAMPLES.map((q) => (
             <button
@@ -125,7 +122,10 @@ export function UseCaseMap() {
             </button>
           ))}
         </div>
-      </div>
-    </figure>
+      </details>
+    </div>
   );
 }
+
+/** @deprecated name kept so older imports still typecheck if any remain */
+export const UseCaseMap = CapabilityHud;

@@ -106,6 +106,15 @@ export function allIndexed(): ProviderRecord[] {
   return catalogue.filter((p) => p.indexed);
 }
 
+/** Includes sites not yet indexed — the graph hole before Pokémon arrives. */
+export function allKnown(): ProviderRecord[] {
+  return catalogue;
+}
+
+export function writeTool(p: { tools: string[] }): string {
+  return p.tools[p.tools.length - 1] ?? "";
+}
+
 function score(provider: ProviderRecord, terms: string[]): number {
   let s = 0;
   for (const t of terms) {

@@ -35,12 +35,15 @@ export function buildAgentRepTools(): ToolDefinition[] {
         "Find WebMCP-enabled websites that can actually perform part of the " +
         "user's goal. Search engines answer 'where can I read about X'; this " +
         "answers 'which site can do X for me'. Call it once per capability " +
-        "you need — one call for venues, another for catering — rather than " +
-        "one broad call, because it ranks by keyword overlap and a broad " +
-        "query dilutes the match. Returns each site's URL, the tools it " +
-        "exposes, and what it is for. Re-run it later in the conversation " +
-        "when the user's needs change: the set of indexed sites is not " +
-        "fixed, and a capability that was unavailable earlier may exist now.",
+        "you need — one call for venues, another for catering, another for " +
+        "cake, another for entertainment — rather than one broad call, " +
+        "because it ranks by keyword overlap and a broad query dilutes the " +
+        "match. Never skip this and guess URLs. Returns each site's URL, " +
+        "the tools it exposes, why it matched, and what slot it fills. " +
+        "Re-run it later when the user's needs change: the set of indexed " +
+        "sites is not fixed. If they ask for themed entertainment after a " +
+        "site is indexed, call this again — a capability that was missing " +
+        "may exist now.",
       inputSchema: {
         type: "object",
         properties: {
@@ -57,7 +60,10 @@ export function buildAgentRepTools(): ToolDefinition[] {
       },
       execute: async (input: { query: string; limit?: number }) => {
         const hits = discover(input.query, input.limit ?? 5);
-        s().setDiscovery(input.query, hits.map((h) => h.name));
+        s().setDiscovery(input.query, hits.map((h) => ({
+          name: h.name, capability: h.capability, tools: h.tools,
+          relevance: h.relevance, slot: h.slot,
+        })));
         s().log("discover_sites", `"${input.query}" → ${hits.length} provider(s)`, "discovery");
 
         if (!hits.length) {
@@ -75,6 +81,11 @@ export function buildAgentRepTools(): ToolDefinition[] {
               name: h.name, domain: h.domain, url: h.url,
               capability: h.capability, summary: h.summary,
               tools: h.tools, fillsSlot: h.slot, relevance: h.relevance,
+              why: [
+                `has ${h.tools[0]} and ${h.tools[h.tools.length - 1]}`,
+                `fills ${SLOT_LABELS[h.slot].toLowerCase()}`,
+                `keyword overlap ${h.relevance}`,
+              ],
             })),
           },
           `${hits.map((h) => h.name).join(", ")} can help with that.`,
@@ -183,17 +194,23 @@ export function buildAgentRepTools(): ToolDefinition[] {
           guestCount: { type: "integer", minimum: 1, maximum: 500 },
           childAge: { type: "integer", minimum: 0, maximum: 21 },
           theme: { type: "string", description: "e.g. \"Pokémon\". Drives theme-match warnings." },
-          city: { type: "string" },
+          city: { type: "string", description:
+            "Event city, e.g. \"Delhi\" or \"Noida\". Changing city drops venue options that are not in that city. Delhi does not include Noida or Gurugram." },
         },
         additionalProperties: false,
       },
       execute: async (input: Record<string, unknown>) => {
+        const venueBefore = s().slots.venue.candidates.length;
         s().setEvent(input as any);
+        const droppedVenues = venueBefore - s().slots.venue.candidates.length;
         const v = s().validate();
         s().log("set_event_details", Object.keys(input).join(", "), "write");
+        const cityNote = droppedVenues > 0
+          ? ` Dropped ${droppedVenues} venue(s) outside ${String(input.city)}. Search venues again.`
+          : "";
         return toolOk(
           { event: s().event, violations: v },
-          v.length ? `Updated. ${v.length} issue(s) need attention.` : "Event details updated.",
+          (v.length ? `Updated. ${v.length} issue(s) need attention.` : "Event details updated.") + cityNote,
           env(),
         );
       },
@@ -206,10 +223,11 @@ export function buildAgentRepTools(): ToolDefinition[] {
         "Put options you found on a provider site onto the board. This does " +
         "NOT select them — candidates sit side by side so the user can see " +
         "what you considered, and so later swaps have somewhere to go. Add " +
-        "every plausible option you found, not just your favourite: " +
-        "find_savings can only work with what is on the board, and a plan " +
-        "with one candidate per slot cannot be cut down. Send them in one " +
-        "call per slot rather than one per item.",
+        "every option from the provider search, including premium ones, not " +
+        "just the cheapest or your favourite: find_savings can only work " +
+        "with what is on the board, and a plan with one candidate per slot " +
+        "cannot be cut down. Send them in one call per slot rather than one " +
+        "per item.",
       inputSchema: {
         type: "object",
         properties: {
@@ -262,8 +280,10 @@ export function buildAgentRepTools(): ToolDefinition[] {
         "previous selection. This is what moves money onto the running " +
         "total. It books nothing — booking happens only after " +
         "request_approval and commit_plan — so call it freely while " +
-        "exploring. Note that selecting anything invalidates a previous " +
-        "approval, by design.",
+        "exploring. The event budget is a ceiling, not a target: do not " +
+        "minimise spend unless the user asked. Prefer theme and date fit " +
+        "among options already on the board. Selecting anything invalidates " +
+        "a previous approval, by design.",
       inputSchema: {
         type: "object",
         properties: {

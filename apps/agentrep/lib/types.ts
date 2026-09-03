@@ -49,6 +49,22 @@ export interface EventDetails {
   budgetInPaise: number | null;
 }
 
+/** Facts from discover_sites — matching, not a ranking of venues. */
+export interface DiscoveryMatch {
+  name: string;
+  capability: string;
+  tools: string[];
+  relevance: number;
+  slot: SlotId;
+}
+
+export interface DiscoveryState {
+  query: string;
+  providers: string[];
+  hits: DiscoveryMatch[];
+  at: number;
+}
+
 export type ViolationCode =
   | "OVER_BUDGET"
   | "SLOT_EMPTY"

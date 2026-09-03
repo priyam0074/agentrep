@@ -3,10 +3,12 @@
 import { create } from "zustand";
 import {
   SLOT_LABELS, SLOT_ORDER, SLOT_REQUIRED,
-  type Activity, type Candidate, type EventDetails, type HighlightState,
+  type Activity, type Candidate, type DiscoveryMatch, type DiscoveryState,
+  type EventDetails, type HighlightState,
   type Receipt, type Slot, type SlotId, type SwapOption, type Totals,
   type Violation,
 } from "@/lib/types";
+import { candidateConflictsWithCity, sameCity } from "@/lib/city";
 
 interface TokenRecord { planHash: string; expiresAt: number; used: boolean; }
 
@@ -43,12 +45,12 @@ interface PlanState {
   pendingApproval: PendingApproval | null;
   authorised: boolean;
   receipts: Receipt[];
-  discovery: { query: string; providers: string[]; at: number } | null;
+  discovery: DiscoveryState | null;
   tokens: Record<string, TokenRecord>;
   undoStack: UndoEntry[];
 
   log: (tool: string, summary: string, kind: Activity["kind"]) => void;
-  setDiscovery: (query: string, providers: string[]) => void;
+  setDiscovery: (query: string, hits: DiscoveryMatch[]) => void;
   setEvent: (patch: Partial<EventDetails>) => void;
   upsertCandidates: (slot: SlotId, incoming: Array<Omit<Candidate, "slot" | "addedAt">>) => Candidate[];
   select: (candidateId: string, reason?: string) => Candidate | null;
@@ -75,7 +77,7 @@ let activityId = 0;
 export const usePlanStore = create<PlanState>((set, get) => ({
   stateVersion: 1,
   event: {
-    occasion: "Birthday party", date: null, guestCount: null,
+    occasion: "Untitled plan", date: null, guestCount: null,
     childAge: null, theme: null, city: null, budgetInPaise: null,
   },
   slots: emptySlots(),
@@ -91,15 +93,56 @@ export const usePlanStore = create<PlanState>((set, get) => ({
   log: (tool, summary, kind) =>
     set((s) => ({ activity: [{ id: ++activityId, tool, summary, kind, at: Date.now() }, ...s.activity].slice(0, 40) })),
 
-  setDiscovery: (query, providers) =>
-    set({ discovery: { query, providers, at: Date.now() } }),
+  setDiscovery: (query, hits) =>
+    set({
+      discovery: {
+        query,
+        providers: hits.map((h) => h.name),
+        hits,
+        at: Date.now(),
+      },
+    }),
 
   setEvent: (patch) =>
-    set((s) => ({ event: { ...s.event, ...patch }, stateVersion: s.stateVersion + 1 })),
+    set((s) => {
+      const event = { ...s.event, ...patch };
+      const cityChanged = patch.city !== undefined && !sameCity(s.event.city, event.city);
+      if (!cityChanged) {
+        return { event, stateVersion: s.stateVersion + 1 };
+      }
+
+      const venue = s.slots.venue;
+      const kept = event.city?.trim()
+        ? venue.candidates.filter((c) => !candidateConflictsWithCity(c.attributes, event.city))
+        : venue.candidates;
+      const selectedGone =
+        venue.selectedCandidateId != null &&
+        !kept.some((c) => c.id === venue.selectedCandidateId);
+
+      return {
+        event,
+        stateVersion: s.stateVersion + 1,
+        authorised: selectedGone ? false : s.authorised,
+        slots: {
+          ...s.slots,
+          venue: {
+            ...venue,
+            candidates: kept,
+            selectedCandidateId: selectedGone ? null : venue.selectedCandidateId,
+            selectionReason: selectedGone ? null : venue.selectionReason,
+            bookedReference: selectedGone ? null : venue.bookedReference,
+          },
+        },
+      };
+    }),
 
   upsertCandidates: (slot, incoming) => {
     const now = new Date().toISOString();
-    const built: Candidate[] = incoming.map((c) => ({ ...c, slot, addedAt: now }));
+    const city = get().event.city;
+    const accepted = slot === "venue" && city?.trim()
+      ? incoming.filter((c) => !candidateConflictsWithCity(c.attributes, city))
+      : incoming;
+    const built: Candidate[] = accepted.map((c) => ({ ...c, slot, addedAt: now }));
     set((s) => {
       const existing = s.slots[slot].candidates;
       const byId = new Map(existing.map((c) => [c.id, c]));
