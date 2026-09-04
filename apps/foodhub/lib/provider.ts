@@ -1,4 +1,5 @@
 import type { CatalogueItem, ProviderConfig } from "@agentrep/provider-kit";
+import { DATES, LATER } from "@agentrep/provider-kit";
 import { paise } from "@agentrep/webmcp";
 
 const pkg = (
@@ -12,6 +13,7 @@ const pkg = (
   courses: number,
   tags: string[],
   cuisine: string,
+  dates: string[] = DATES,
 ): CatalogueItem => ({
   id,
   name,
@@ -25,6 +27,7 @@ const pkg = (
     cuisine,
   },
   tags,
+  availableDates: dates,
 });
 
 export const config: ProviderConfig = {
@@ -83,7 +86,7 @@ export const config: ProviderConfig = {
   items: [
     pkg("food-kids-party", "Kids Party Package", 4500, "Pizza, fries, drinks and dessert. The standard order, and the one most parents pick.", 15, 180, true, 4, ["kids", "pizza", "popular"], "pizza"),
     pkg("food-mini-feast", "Mini Feast", 2800, "Sandwiches, fries and juice. Less food than the party package, and it shows.", 12, 150, true, 3, ["kids", "budget"], "snacks"),
-    pkg("food-deluxe", "Deluxe Spread", 6800, "Live pasta counter, chaat station, mocktails and dessert. A proper spread for the adults too.", 20, 240, false, 6, ["premium", "adults"], "premium"),
+    pkg("food-deluxe", "Deluxe Spread", 6800, "Live pasta counter, chaat station, mocktails and dessert. A proper spread for the adults too.", 20, 240, false, 6, ["premium", "adults"], "premium", LATER),
     pkg("food-snack-boxes", "Snack Boxes", 1950, "Individually packed boxes handed out at the end. No service staff, and no plates to collect.", 15, 120, true, 1, ["budget", "takeaway"], "snacks"),
     pkg("food-pizza-party", "Wood-fired Pizza Party", 4200, "Three pizzas on rotation, garlic bread, cola. Kids eat this without being asked twice.", 16, 170, true, 3, ["kids", "pizza", "popular"], "pizza"),
     pkg("food-thin-crust", "Thin-crust Trio", 3900, "Margherita, corn and paneer. Lighter than the party pizza, same oven.", 14, 165, true, 3, ["kids", "pizza"], "pizza"),
@@ -102,7 +105,7 @@ export const config: ProviderConfig = {
     pkg("food-rajma-chawal", "Rajma Chawal Tubs", 2600, "Home-style rajma, jeera rice. The comfort order.", 16, 125, true, 2, ["indian", "budget", "kids"], "indian"),
     pkg("food-north-thali", "North Indian Thali", 5400, "Dal, two sabzis, roti, rice, pickle, sweet. A sit-down meal.", 15, 220, true, 6, ["indian", "premium"], "indian"),
     pkg("food-gujarati-thali", "Gujarati Thali", 5000, "Sweet dal, undhiyu in season, rotli, farsan. Vegetarian by default.", 14, 210, true, 6, ["indian", "premium"], "indian"),
-    pkg("food-kerala-sadya", "Mini Sadya", 6200, "Banana leaf, sambar, avial, payasam. Needs notice, and it shows.", 12, 260, true, 8, ["indian", "premium"], "south"),
+    pkg("food-kerala-sadya", "Mini Sadya", 6200, "Banana leaf, sambar, avial, payasam. Needs notice, and it shows.", 12, 260, true, 8, ["indian", "premium"], "south", LATER),
     pkg("food-dosa-counter", "Dosa Counter", 3800, "Plain and masala dosas off a tava. One cook, a queue, worth it.", 16, 165, true, 3, ["indian", "kids", "south"], "south"),
     pkg("food-idli-vada", "Idli Vada Tiffin", 2400, "Idli, vada, sambar, chutney. Breakfast party, or a 4pm hunger gap.", 15, 115, true, 3, ["indian", "budget", "south"], "south"),
     pkg("food-south-mini", "South Indian Mini Meal", 3600, "Rice, sambar, poriyal, appalam. Quieter than a dosa counter.", 14, 160, true, 4, ["indian", "south"], "south"),
@@ -110,8 +113,8 @@ export const config: ProviderConfig = {
     pkg("food-noodle-wok", "Live Noodle Wok", 4700, "Hakka tossed in front of them. Smoke, theatre, soy.", 18, 185, false, 3, ["chinese", "premium", "kids"], "chinese"),
     pkg("food-momos-platter", "Momo Platters", 2700, "Veg momos, spicy and mild dip. Steamers on the table.", 16, 120, true, 2, ["chinese", "budget", "kids"], "chinese"),
     pkg("food-paneer-tikka", "Paneer Tikka Skewers", 3500, "Tandoor paneer, mint chutney. Pass-around, not a meal.", 18, 145, true, 2, ["indian", "kids"], "grill"),
-    pkg("food-tandoori-mixed", "Mixed Grill Platter", 6400, "Chicken tikka, seekh, paneer, salad. For mixed tables.", 16, 250, false, 4, ["indian", "premium"], "grill"),
-    pkg("food-bbq-grill", "BBQ Grill Station", 7200, "Live grill, corn, chicken, veg skewers. Needs outdoor or a terrace.", 20, 270, false, 5, ["premium", "kids"], "grill"),
+    pkg("food-tandoori-mixed", "Mixed Grill Platter", 6400, "Chicken tikka, seekh, paneer, salad. For mixed tables.", 16, 250, false, 4, ["indian", "premium"], "grill", LATER),
+    pkg("food-bbq-grill", "BBQ Grill Station", 7200, "Live grill, corn, chicken, veg skewers. Needs outdoor or a terrace.", 20, 270, false, 5, ["premium", "kids"], "grill", LATER),
     pkg("food-kebabs-rolls", "Kathi Rolls", 3400, "Paneer and egg rolls, wrapped. Easy to hold while they run.", 16, 150, false, 2, ["indian", "kids", "popular"], "wraps"),
     pkg("food-wraps-station", "Wraps Station", 3700, "Tortillas, falafel, hummus, salad. The taco bar's quieter cousin.", 16, 160, true, 3, ["kids"], "wraps"),
     pkg("food-hotdog-cart", "Hotdog Cart", 2500, "Veg dogs, mustard, ketchup. A cart, not a kitchen.", 15, 110, true, 2, ["kids", "budget"], "burgers"),

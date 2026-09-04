@@ -1,9 +1,7 @@
 import type { ProviderConfig } from "@agentrep/provider-kit";
+import { DATES, LATER } from "@agentrep/provider-kit";
 import { paise } from "@agentrep/webmcp";
 import { isNcrQuery, localityFitsQuery, resolveCity } from "./cities";
-
-const DATES = ["2026-09-12", "2026-09-19", "2026-09-26"];
-const LATER = ["2026-09-19", "2026-09-26"];
 
 const textMatch = (item: {
   name: string;

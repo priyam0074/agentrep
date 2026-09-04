@@ -1,8 +1,6 @@
 import type { ProviderConfig } from "@agentrep/provider-kit";
+import { DATES as DELIVERY, LATER } from "@agentrep/provider-kit";
 import { paise } from "@agentrep/webmcp";
-
-const DELIVERY = ["2026-09-12", "2026-09-19", "2026-09-26"];
-const LATER = ["2026-09-19", "2026-09-26"];
 
 const textMatch = (item: { name: string; blurb: string; tags: string[]; attributes: Record<string, string | number | boolean> }, q: string) => {
   const hay = `${item.name} ${item.blurb} ${item.tags.join(" ")} ${item.attributes.flavour}`.toLowerCase();

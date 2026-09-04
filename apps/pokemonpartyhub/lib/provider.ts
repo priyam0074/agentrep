@@ -1,4 +1,5 @@
 import type { ProviderConfig } from "@agentrep/provider-kit";
+import { DATES, LATER } from "@agentrep/provider-kit";
 import { paise } from "@agentrep/webmcp";
 
 /**
@@ -52,7 +53,7 @@ export const config: ProviderConfig = {
       blurb: "Costumed Pikachu for photos, a short dance and the cake cutting.",
       attributes: { durationMinutes: 120, performers: 1, ageRange: "3-10" },
       tags: ["pokemon", "pikachu", "costume"],
-      availableDates: ["2026-09-12", "2026-09-19", "2026-09-26"],
+      availableDates: DATES,
     },
     {
       id: "act-trainer-games",
@@ -61,7 +62,7 @@ export const config: ProviderConfig = {
       blurb: "A host runs badge-hunt and catching games with props for up to 20 kids.",
       attributes: { durationMinutes: 90, performers: 1, ageRange: "5-12" },
       tags: ["pokemon", "games", "host"],
-      availableDates: ["2026-09-12", "2026-09-19", "2026-09-26"],
+      availableDates: DATES,
     },
     {
       id: "act-magic",
@@ -70,7 +71,7 @@ export const config: ProviderConfig = {
       blurb: "Forty minutes of card and rope tricks, then balloon animals.",
       attributes: { durationMinutes: 60, performers: 1, ageRange: "4-12" },
       tags: ["magic", "show"],
-      availableDates: ["2026-09-19", "2026-09-26"],
+      availableDates: LATER,
     },
     {
       id: "act-balloons",
@@ -79,7 +80,7 @@ export const config: ProviderConfig = {
       blurb: "One artist making shapes on request, including Pokémon, for an hour.",
       attributes: { durationMinutes: 60, performers: 1, ageRange: "3-12" },
       tags: ["balloons", "pokemon", "craft"],
-      availableDates: ["2026-09-12", "2026-09-19", "2026-09-26"],
+      availableDates: DATES,
     },
   ],
 };
